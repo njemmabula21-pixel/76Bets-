@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>76Bets</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #05110a;
+            color: #e4f0e8;
+            padding: 1rem;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: #0c1f13;
+            border: 1px solid #1a3522;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            color: #00ff85;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #1a3522;
+            background: #0c1f13;
+            color: #e4f0e8;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        input[type="email"]:focus,
+        input[type="password"]:focus {
+            outline: none;
+            border-color: #00ff85;
+        }
+
+        input[type="submit"],
+        .btn-secondary {
+            width: 100%;
+            padding: 0.75rem;
+            background: #00ff85;
+            color: #000;
+            border: none;
+            font-weight: bold;
+            font-size: 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 0.5rem;
+        }
+
+        input[type="submit"]:active,
+        .btn-secondary:active {
+            opacity: 0.8;
+        }
+
+        .btn-secondary {
+            background: #00c965;
+        }
+
+        .msg {
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            min-height: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        .error {
+            background: rgba(255, 68, 68, 0.2);
+            color: #ff4444;
+            border: 1px solid #ff4444;
+        }
+
+        .success {
+            background: rgba(0, 255, 133, 0.2);
+            color: #00ff85;
+            border: 1px solid #00ff85;
+        }
+
+        .info {
+            background: rgba(100, 200, 200, 0.2);
+            color: #4db8ac;
+            border: 1px solid #4db8ac;
+        }
+
+        #authForm {
+            display: block;
+        }
+
+        #dashboard {
+            display: none;
+            text-align: center;
+        }
+
+        #dashboard h2 {
+            color: #00ff85;
+            margin-bottom: 1rem;
+        }
+
+        .toggle-link {
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .toggle-link a {
+            color: #00ff85;
+            text-decoration: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- AUTH FORM -->
+        <div id="authForm" class="card">
+            <h1>76Bets</h1>
+            <div class="msg info" id="status">Initializing...</div>
+
+            <form id="authFormElement">
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+
+                <input type="submit" id="submitBtn" value="Sign In">
+            </form>
+
+            <button class="btn-secondary" type="button" id="toggleBtn">Don't have an account? Sign Up</button>
+
+            <div class="toggle-link">
+                <a onclick="toggleMode()">Switch Mode</a>
+            </div>
+        </div>
+
+        <!-- DASHBOARD -->
+        <div id="dashboard" class="card">
+            <h2>Welcome! ✅</h2>
+            <p>Logged in as:</p>
+            <p id="userEmail" style="color: #4a7a5a;"></p>
+            <input type="submit" value="Logout" onclick="handleLogout()">
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://wexldumfmwpyisuudjce.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_JtrlRlf35bMovhVHVVKs5A_IISU06Ko';
+
+        let supabase = null;
+        let isSignUpMode = false;
+
+        // INIT
+        async function init() {
+            try {
+                const { createClient } = window.supabase;
+                supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+                updateStatus('Checking session...', 'info');
+
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session?.user) {
+                    showDashboard(session.user);
+                } else {
+                    updateStatus('Ready', 'info');
+                }
+            } catch (err) {
+                updateStatus('Error: ' + err.message, 'error');
+            }
+        }
+
+        // UPDATE STATUS
+        function updateStatus(msg, type) {
+            const status = document.getElementById('status');
+            status.className = 'msg ' + type;
+            status.textContent = msg;
+            console.log(type + ': ' + msg);
+        }
+
+        // HANDLE FORM SUBMIT
+        document.getElementById('authFormElement').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const submitBtn = document.getElementById('submitBtn');
+
+            if (!email || !password) {
+                updateStatus('Please fill in all fields', 'error');
+                return;
+            }
+
+            submitBtn.disabled = true;
+
+            try {
+                if (isSignUpMode) {
+                    updateStatus('Creating account...', 'info');
+
+                    const { data, error } = await supabase.auth.signUp({
+                        email,
+                        password
+                    });
+
+                    if (error) throw new Error(error.message);
+
+                    updateStatus('Account created!', 'success');
+
+                    if (data.user) {
+                        // Create profile
+                        await supabase.from('profiles').insert({
+                            id: data.user.id,
+                            bankroll: 0,
+                            currency: 'TZS'
+                        }).catch(e => console.warn('Profile warning:', e));
+
+                        // Auto sign in
+                        const { data: signIn, error: signInErr } = await supabase.auth.signInWithPassword({
+                            email,
+                            password
+                        });
+
+                        if (!signInErr && signIn.user) {
+                            showDashboard(signIn.user);
+                        }
+                    }
+                } else {
+                    updateStatus('Signing in...', 'info');
+
+                    const { data, error } = await supabase.auth.signInWithPassword({
+                        email,
+                        password
+                    });
+
+                    if (error) throw new Error(error.message);
+
+                    if (data.user) {
+                        showDashboard(data.user);
+                    }
+                }
+            } catch (err) {
+                updateStatus('Error: ' + err.message, 'error');
+            } finally {
+                submitBtn.disabled = false;
+            }
+        });
+
+        // TOGGLE MODE
+        function toggleMode() {
+            isSignUpMode = !isSignUpMode;
+            const submitBtn = document.getElementById('submitBtn');
+            const toggleBtn = document.getElementById('toggleBtn');
+
+            if (isSignUpMode) {
+                submitBtn.value = 'Create Account';
+                toggleBtn.textContent = 'Already have an account? Sign In';
+            } else {
+                submitBtn.value = 'Sign In';
+                toggleBtn.textContent = "Don't have an account? Sign Up";
+            }
+
+            updateStatus('Ready', 'info');
+            document.getElementById('authFormElement').reset();
+        }
+
+        // SHOW DASHBOARD
+        function showDashboard(user) {
+            document.getElementById('authForm').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            document.getElementById('userEmail').textContent = user.email;
+        }
+
+        // LOGOUT
+        async function handleLogout() {
+            try {
+                await supabase.auth.signOut();
+                document.getElementById('authForm').style.display = 'block';
+                document.getElementById('dashboard').style.display = 'none';
+                document.getElementById('authFormElement').reset();
+                isSignUpMode = false;
+                updateStatus('Logged out', 'success');
+            } catch (err) {
+                updateStatus('Logout error: ' + err.message, 'error');
+            }
+        }
+
+        // RUN
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
