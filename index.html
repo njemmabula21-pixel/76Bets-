@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>76Bets</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            background: #05110a;
+            color: #e4f0e8;
+            font-family: Arial;
+            padding: 1rem;
+            margin: 0;
+        }
+        .container { max-width: 400px; margin: 0 auto; }
+        .box { background: #0c1f13; padding: 2rem; border-radius: 8px; border: 1px solid #1a3522; }
+        h1 { color: #00ff85; text-align: center; margin-bottom: 0.5rem; }
+        .badge { text-align: center; font-size: 0.75rem; color: #4a7a5a; margin-bottom: 1rem; }
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; margin-bottom: 0.5rem; font-weight: bold; }
+        input { width: 100%; padding: 0.75rem; background: #0c1f13; color: #e4f0e8; border: 1px solid #1a3522; border-radius: 4px; font-size: 1rem; }
+        input:focus { outline: none; border-color: #00ff85; }
+        button { width: 100%; padding: 0.75rem; background: #00ff85; color: #000; border: none; font-weight: bold; font-size: 1rem; border-radius: 4px; cursor: pointer; margin-bottom: 0.5rem; }
+        button:active { opacity: 0.8; }
+        .msg { padding: 1rem; border-radius: 4px; margin: 1rem 0; min-height: 2rem; border: 1px solid; }
+        .success { background: rgba(0,255,133,0.1); border-color: #00ff85; color: #00ff85; }
+        .error { background: rgba(255,68,68,0.1); border-color: #ff4444; color: #ff4444; }
+        .info { background: rgba(100,200,200,0.1); border-color: #4db8ac; color: #4db8ac; }
+        #dashboard { text-align: center; }
+        #dashboard h2 { color: #00ff85; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="box">
+            <h1>76Bets</h1>
+            <div class="badge" id="mode">Initializing...</div>
+            
+            <div id="authForm">
+                <div class="form-group">
+                    <label>Email:</label>
+                    <input type="email" id="email" placeholder="test@example.com">
+                </div>
+                
+                <div class="form-group">
+                    <label>Password:</label>
+                    <input type="password" id="password" placeholder="password123">
+                </div>
+                
+                <button onclick="handleSignUp()">Sign Up</button>
+                <button onclick="handleSignIn()">Sign In</button>
+                
+                <div id="msg" class="msg info">Ready</div>
+            </div>
+            
+            <div id="dashboard" style="display:none;">
+                <h2>Welcome! ✅</h2>
+                <p>Logged in as:</p>
+                <p id="userEmail" style="color: #4a7a5a; font-weight: bold;"></p>
+                <button onclick="handleLogout()">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://wexldumfmwpyisuudjce.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_JtrlRlf35bMovhVHVVKs5A_IISU06Ko';
+
+        let supabase = null;
+        let useSupabase = false;
+
+        function log(msg, type = 'info') {
+            const msgDiv = document.getElementById('msg');
+            msgDiv.className = 'msg ' + type;
+            msgDiv.textContent = msg;
+            console.log(type + ': ' + msg);
+        }
+
+        function setMode(text) {
+            document.getElementById('mode').textContent = text;
+        }
+
+        // INIT
+        window.addEventListener('DOMContentLoaded', async function() {
+            try {
+                // Try to init Supabase
+                if (window.supabase && window.supabase.createClient) {
+                    const { createClient } = window.supabase;
+                    supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+                    
+                    // Test connection
+                    const { data, error } = await supabase.auth.getSession();
+                    
+                    if (error) throw error;
+                    
+                    useSupabase = true;
+                    setMode('Cloud Mode (Supabase)');
+                    log('Connected to Supabase', 'success');
+
+                    if (data.session?.user) {
+                        showDashboard(data.session.user);
+                    }
+                } else {
+                    throw new Error('Supabase not available');
+                }
+            } catch (err) {
+                // Fallback to local storage
+                useSupabase = false;
+                setMode('Local Mode (No Cloud)');
+                log('Using local storage (Supabase unavailable)', 'info');
+                
+                const currentUser = localStorage.getItem('currentUser');
+                if (currentUser) {
+                    showDashboard({ email: currentUser });
+                }
+            }
+        });
+
+        async function handleSignUp() {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+
+            if (!email || !password) {
+                log('❌ Fill all fields', 'error');
+                return;
+            }
+
+            if (password.length < 6) {
+                log('❌ Password 6+ characters', 'error');
+                return;
+            }
+
+            log('⏳ Creating account...', 'info');
+
+            try {
+                if (useSupabase) {
+                    // Use Supabase
+                    const { data, error } = await supabase.auth.signUp({ email, password });
+                    
+                    if (error) throw new Error(error.message);
+
+                    if (data.user) {
+                        // Create profile
+                        await supabase.from('profiles').insert({
+                            id: data.user.id,
+                            bankroll: 0,
+                            currency: 'TZS'
+                        }).catch(() => {});
+
+                        // Auto sign in
+                        const { data: signin, error: signinErr } = await supabase.auth.signInWithPassword({
+                            email,
+                            password
+                        });
+
+                        if (!signinErr && signin.user) {
+                            log('✅ Account created!', 'success');
+                            showDashboard(signin.user);
+                        }
+                    }
+                } else {
+                    // Use local storage
+                    const accounts = JSON.parse(localStorage.getItem('accounts') || '{}');
+                    
+                    if (accounts[email]) {
+                        log('❌ Email already exists', 'error');
+                        return;
+                    }
+
+                    accounts[email] = password;
+                    localStorage.setItem('accounts', JSON.stringify(accounts));
+                    localStorage.setItem('currentUser', email);
+
+                    log('✅ Account created!', 'success');
+                    showDashboard({ email });
+                }
+            } catch (err) {
+                log('❌ Error: ' + err.message, 'error');
+            }
+        }
+
+        async function handleSignIn() {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+
+            if (!email || !password) {
+                log('❌ Fill all fields', 'error');
+                return;
+            }
+
+            log('⏳ Signing in...', 'info');
+
+            try {
+                if (useSupabase) {
+                    // Use Supabase
+                    const { data, error } = await supabase.auth.signInWithPassword({
+                        email,
+                        password
+                    });
+
+                    if (error) throw new Error(error.message);
+
+                    if (data.user) {
+                        log('✅ Signed in!', 'success');
+                        showDashboard(data.user);
+                    }
+                } else {
+                    // Use local storage
+                    const accounts = JSON.parse(localStorage.getItem('accounts') || '{}');
+                    
+                    if (!accounts[email]) {
+                        log('❌ Email not found', 'error');
+                        return;
+                    }
+
+                    if (accounts[email] !== password) {
+                        log('❌ Wrong password', 'error');
+                        return;
+                    }
+
+                    localStorage.setItem('currentUser', email);
+                    log('✅ Signed in!', 'success');
+                    showDashboard({ email });
+                }
+            } catch (err) {
+                log('❌ Error: ' + err.message, 'error');
+            }
+        }
+
+        function showDashboard(user) {
+            document.getElementById('authForm').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            document.getElementById('userEmail').textContent = user.email || user;
+        }
+
+        function handleLogout() {
+            if (useSupabase) {
+                supabase.auth.signOut();
+            } else {
+                localStorage.removeItem('currentUser');
+            }
+
+            document.getElementById('authForm').style.display = 'block';
+            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('email').value = '';
+            document.getElementById('password').value = '';
+            log('✅ Logged out', 'success');
+        }
+    </script>
+</body>
+</html>
