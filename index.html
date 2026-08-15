@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>76Bets</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #05110a;
+            color: #e4f0e8;
+            font-family: Arial, sans-serif;
+            padding-bottom: 80px;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        /* ── HEADER ── */
+        .header {
+            background: #0c1f13;
+            border-bottom: 1px solid #1a3522;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #00ff85;
+            font-size: 1.5rem;
+        }
+
+        .logout-btn {
+            background: #ff4444;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.85rem;
+        }
+
+        /* ── AUTH FORM ── */
+        .auth-form {
+            background: #0c1f13;
+            padding: 2rem;
+            border-radius: 8px;
+            border: 1px solid #1a3522;
+        }
+
+        .auth-form h1 {
+            color: #00ff85;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.75rem;
+            background: #0c1f13;
+            color: #e4f0e8;
+            border: 1px solid #1a3522;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #00ff85;
+        }
+
+        button {
+            width: 100%;
+            padding: 0.75rem;
+            background: #00ff85;
+            color: #000;
+            border: none;
+            font-weight: bold;
+            font-size: 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 0.5rem;
+        }
+
+        button:active {
+            opacity: 0.8;
+        }
+
+        .msg {
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+            border: 1px solid;
+        }
+
+        .success {
+            background: rgba(0,255,133,0.1);
+            border-color: #00ff85;
+            color: #00ff85;
+        }
+
+        .error {
+            background: rgba(255,68,68,0.1);
+            border-color: #ff4444;
+            color: #ff4444;
+        }
+
+        .info {
+            background: rgba(100,200,200,0.1);
+            border-color: #4db8ac;
+            color: #4db8ac;
+        }
+
+        /* ── DASHBOARD ── */
+        .dashboard {
+            display: none;
+        }
+
+        .card {
+            background: #0c1f13;
+            border: 1px solid #1a3522;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-size: 0.875rem;
+            color: #4a7a5a;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-value {
+            font-size: 1.75rem;
+            color: #00ff85;
+            font-weight: bold;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-card {
+            background: #0c1f13;
+            border: 1px solid #1a3522;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #4a7a5a;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            color: #00ff85;
+            font-weight: bold;
+        }
+
+        /* ── NAVIGATION BUTTONS ── */
+        .nav-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .nav-btn {
+            background: #00ff85;
+            color: #000;
+            border: none;
+            padding: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        .nav-btn:active {
+            opacity: 0.8;
+        }
+
+        .nav-btn-disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* ── BOTTOM NAV ── */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #0c1f13;
+            border-top: 1px solid #1a3522;
+            display: flex;
+            max-width: 400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .nav-item {
+            flex: 1;
+            padding: 0.75rem;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            background: none;
+            color: #4a7a5a;
+            font-weight: bold;
+            font-size: 0.75rem;
+            transition: color 0.2s;
+        }
+
+        .nav-item.active {
+            color: #00ff85;
+        }
+
+        .nav-item:active {
+            opacity: 0.8;
+        }
+
+        /* ── TOGGLE LINK ── */
+        .toggle-link {
+            text-align: center;
+            font-size: 0.875rem;
+            color: #4a7a5a;
+            margin-top: 1rem;
+        }
+
+        .toggle-link a {
+            color: #00ff85;
+            text-decoration: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- AUTH FORM -->
+        <div id="authSection" class="auth-form">
+            <h1>76Bets</h1>
+
+            <div class="form-group">
+                <label>Email:</label>
+                <input type="email" id="email" placeholder="test@example.com">
+            </div>
+
+            <div class="form-group">
+                <label>Password:</label>
+                <input type="password" id="password" placeholder="password123">
+            </div>
+
+            <button onclick="handleSignUp()">Sign Up</button>
+            <button onclick="handleSignIn()">Sign In</button>
+
+            <div id="msg" class="msg info">Ready</div>
+
+            <div class="toggle-link">
+                <a onclick="toggleMode()">Don't have an account? Sign Up</a>
+            </div>
+        </div>
+
+        <!-- DASHBOARD -->
+        <div id="dashboardSection" class="dashboard">
+            <div class="header">
+                <h1>76Bets</h1>
+                <button class="logout-btn" onclick="handleLogout()">Logout</button>
+            </div>
+
+            <!-- BANKROLL CARD -->
+            <div class="card">
+                <div class="card-title">💰 Current Bankroll</div>
+                <div class="card-value" id="bankroll">TZS 5,000</div>
+            </div>
+
+            <!-- STATS GRID -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Win Rate</div>
+                    <div class="stat-number" id="winRate">0%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Bets</div>
+                    <div class="stat-number" id="totalBets">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">ROI</div>
+                    <div class="stat-number" id="roi">0%</div>
+                </div>
+            </div>
+
+            <!-- QUICK ACTIONS -->
+            <div class="card">
+                <div class="card-title">📊 Recent Activity</div>
+                <div style="color: #4a7a5a; font-size: 0.875rem; line-height: 1.6;">
+                    <p>✓ Last bet: 2 hours ago</p>
+                    <p>✓ Current streak: 2 wins</p>
+                    <p>✓ Total profit: TZS 2,500</p>
+                </div>
+            </div>
+
+            <!-- NAVIGATION BUTTONS -->
+            <div class="nav-buttons">
+                <button class="nav-btn" onclick="goTo('fixtures')">📋 Fixtures</button>
+                <button class="nav-btn" onclick="goTo('betslip')">🎯 New Bet</button>
+                <button class="nav-btn" onclick="goTo('reports')">📊 Reports</button>
+                <button class="nav-btn" onclick="goTo('settings')">⚙️ Settings</button>
+            </div>
+
+            <div id="message" style="text-align: center; color: #4a7a5a; font-size: 0.875rem; margin-top: 1rem;">
+                Select a section from below
+            </div>
+        </div>
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <div class="bottom-nav" id="bottomNav" style="display: none;">
+        <button class="nav-item active" onclick="switchTab('home')">🏠 Home</button>
+        <button class="nav-item" onclick="switchTab('fixtures')">📋 Fixtures</button>
+        <button class="nav-item" onclick="switchTab('bets')">🎯 Bets</button>
+        <button class="nav-item" onclick="switchTab('reports')">📊 Reports</button>
+        <button class="nav-item" onclick="switchTab('settings')">⚙️ Settings</button>
+    </div>
+
+    <script>
+        let isSignUpMode = false;
+
+        // LOCAL STORAGE
+        function getAccountData(email) {
+            const data = JSON.parse(localStorage.getItem('userdata:' + email) || '{}');
+            return {
+                bankroll: data.bankroll || 5000,
+                wins: data.wins || 0,
+                losses: data.losses || 0,
+                totalBets: data.totalBets || 0,
+                profit: data.profit || 0
+            };
+        }
+
+        function saveAccountData(email, data) {
+            localStorage.setItem('userdata:' + email, JSON.stringify(data));
+        }
+
+        function log(msg, type = 'info') {
+            const msgDiv = document.getElementById('msg');
+            msgDiv.className = 'msg ' + type;
+            msgDiv.textContent = msg;
+            console.log(type + ': ' + msg);
+        }
+
+        function toggleMode() {
+            isSignUpMode = !isSignUpMode;
+            const btn = document.querySelector('.toggle-link a');
+            if (isSignUpMode) {
+                btn.textContent = 'Already have an account? Sign In';
+            } else {
+                btn.textContent = "Don't have an account? Sign Up";
+            }
+        }
+
+        function handleSignUp() {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+
+            if (!email || !password) {
+                log('❌ Fill all fields', 'error');
+                return;
+            }
+
+            if (password.length < 6) {
+                log('❌ Password 6+ characters', 'error');
+                return;
+            }
+
+            const accounts = JSON.parse(localStorage.getItem('accounts') || '{}');
+            if (accounts[email]) {
+                log('❌ Email already exists', 'error');
+                return;
+            }
+
+            accounts[email] = password;
+            localStorage.setItem('accounts', JSON.stringify(accounts));
+            localStorage.setItem('currentUser', email);
+
+            // Initialize user data
+            saveAccountData(email, { bankroll: 5000 });
+
+            log('✅ Account created!', 'success');
+            showDashboard(email);
+        }
+
+        function handleSignIn() {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+
+            if (!email || !password) {
+                log('❌ Fill all fields', 'error');
+                return;
+            }
+
+            const accounts = JSON.parse(localStorage.getItem('accounts') || '{}');
+
+            if (!accounts[email]) {
+                log('❌ Email not found', 'error');
+                return;
+            }
+
+            if (accounts[email] !== password) {
+                log('❌ Wrong password', 'error');
+                return;
+            }
+
+            localStorage.setItem('currentUser', email);
+            log('✅ Signed in!', 'success');
+            showDashboard(email);
+        }
+
+        function showDashboard(email) {
+            document.getElementById('authSection').style.display = 'none';
+            document.getElementById('dashboardSection').style.display = 'block';
+            document.getElementById('bottomNav').style.display = 'flex';
+
+            // Load user data
+            const data = getAccountData(email);
+            document.getElementById('bankroll').textContent = 'TZS ' + data.bankroll.toLocaleString();
+            
+            const winRate = data.totalBets > 0 ? Math.round((data.wins / data.totalBets) * 100) : 0;
+            document.getElementById('winRate').textContent = winRate + '%';
+            document.getElementById('totalBets').textContent = data.totalBets;
+            
+            const roi = data.bankroll > 5000 
+                ? Math.round(((data.bankroll - 5000) / 5000) * 100) 
+                : Math.round(((data.bankroll - 5000) / 5000) * 100);
+            document.getElementById('roi').textContent = roi + '%';
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('currentUser');
+            document.getElementById('authSection').style.display = 'block';
+            document.getElementById('dashboardSection').style.display = 'none';
+            document.getElementById('bottomNav').style.display = 'none';
+            document.getElementById('email').value = '';
+            document.getElementById('password').value = '';
+            isSignUpMode = false;
+            log('✅ Logged out', 'success');
+        }
+
+        function goTo(section) {
+            const msg = document.getElementById('message');
+            msg.textContent = '📌 Coming Soon: ' + section.toUpperCase();
+        }
+
+        function switchTab(tab) {
+            // Update active nav item
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            const msg = document.getElementById('message');
+            const tabs = {
+                home: 'Home',
+                fixtures: 'Fixtures',
+                bets: 'Bets',
+                reports: 'Reports',
+                settings: 'Settings'
+            };
+            msg.textContent = '📌 ' + tabs[tab] + ' (Coming Soon)';
+        }
+
+        // CHECK IF USER LOGGED IN ON PAGE LOAD
+        window.addEventListener('DOMContentLoaded', function() {
+            const currentUser = localStorage.getItem('currentUser');
+            if (currentUser) {
+                showDashboard(currentUser);
+            }
+        });
+    </script>
+</body>
+</html>
