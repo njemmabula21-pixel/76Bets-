@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>76Bets Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            background: #05110a;
+            color: #e4f0e8;
+            font-family: Arial;
+            padding: 2rem;
+            text-align: center;
+        }
+        .box { background: #0c1f13; padding: 2rem; border-radius: 8px; }
+        h1 { color: #00ff85; }
+        input { padding: 0.5rem; margin: 0.5rem; width: 80%; }
+        button { padding: 0.75rem 2rem; background: #00ff85; color: #000; border: none; font-weight: bold; cursor: pointer; width: 90%; margin: 0.5rem auto; }
+        p { margin: 1rem 0; font-size: 0.9rem; }
+    </style>
+</head>
+<body onload="pageLoaded()">
+    <div class="box">
+        <h1>76Bets</h1>
+        <p id="status">Loading...</p>
+        
+        <input type="email" id="email" placeholder="email@example.com">
+        <input type="password" id="password" placeholder="password">
+        
+        <button onclick="testAlert()">🧪 TEST ALERT</button>
+        <button onclick="signUp()">SIGN UP</button>
+        <button onclick="signIn()">SIGN IN</button>
+        
+        <div id="result" style="margin-top: 2rem; padding: 1rem; background: rgba(0,255,133,0.1); border-radius: 4px; min-height: 2rem;"></div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://wexldumfmwpyisuudjce.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_JtrlRlf35bMovhVHVVKs5A_IISU06Ko';
+
+        let supabase = null;
+
+        function pageLoaded() {
+            document.getElementById('status').textContent = '✅ Page loaded! Try TEST ALERT button.';
+            
+            try {
+                const { createClient } = window.supabase;
+                supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+                document.getElementById('status').textContent = '✅ Supabase ready!';
+            } catch (err) {
+                document.getElementById('status').textContent = '❌ Error: ' + err.message;
+            }
+        }
+
+        function testAlert() {
+            alert('✅ Buttons work!');
+            showResult('SUCCESS: Test alert worked!');
+        }
+
+        function showResult(msg) {
+            document.getElementById('result').textContent = msg;
+        }
+
+        async function signUp() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            if (!email || !password) {
+                showResult('❌ Fill in email and password');
+                return;
+            }
+
+            showResult('⏳ Creating account...');
+
+            try {
+                const { data, error } = await supabase.auth.signUp({ email, password });
+                
+                if (error) {
+                    showResult('❌ Signup error: ' + error.message);
+                    return;
+                }
+
+                showResult('✅ Account created! ' + email);
+
+                if (data.user) {
+                    await supabase.from('profiles').insert({
+                        id: data.user.id,
+                        bankroll: 0,
+                        currency: 'TZS'
+                    }).catch(() => {});
+
+                    const { data: signin, error: signinErr } = await supabase.auth.signInWithPassword({ email, password });
+                    
+                    if (!signinErr && signin.user) {
+                        showResult('✅ Logged in! ' + signin.user.email);
+                    }
+                }
+            } catch (err) {
+                showResult('❌ Error: ' + err.message);
+            }
+        }
+
+        async function signIn() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            if (!email || !password) {
+                showResult('❌ Fill in email and password');
+                return;
+            }
+
+            showResult('⏳ Signing in...');
+
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+                
+                if (error) {
+                    showResult('❌ Signin error: ' + error.message);
+                    return;
+                }
+
+                if (data.user) {
+                    showResult('✅ Logged in! ' + data.user.email);
+                }
+            } catch (err) {
+                showResult('❌ Error: ' + err.message);
+            }
+        }
+    </script>
+</body>
+</html>
