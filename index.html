@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#00ff85">
+    <title>76Bets - Login</title>
+    
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #05110a;
+            color: #e4f0e8;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .card {
+            background: #0c1f13;
+            border: 1px solid #1a3522;
+            border-radius: 16px;
+            padding: 2rem;
+            width: 100%;
+            box-shadow: 0 0 40px rgba(0, 255, 133, 0.1);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .logo-box {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #00ff85, #00c965);
+            font-size: 28px;
+            font-weight: 700;
+            color: #000;
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .subtitle {
+            font-size: 0.875rem;
+            color: #4a7a5a;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        label {
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        input {
+            padding: 0.75rem;
+            border: 1px solid #1a3522;
+            border-radius: 8px;
+            background: #0c1f13;
+            color: #e4f0e8;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #00ff85;
+        }
+
+        input::placeholder {
+            color: #4a7a5a;
+        }
+
+        button {
+            padding: 0.75rem;
+            border: none;
+            border-radius: 8px;
+            background: #00ff85;
+            color: #000;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        button:hover:not(:disabled) {
+            opacity: 0.9;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .error {
+            background: rgba(255, 68, 68, 0.1);
+            border: 1px solid rgba(255, 68, 68, 0.3);
+            border-radius: 8px;
+            padding: 0.75rem;
+            font-size: 0.875rem;
+            color: #ff4444;
+            margin-top: 0.5rem;
+        }
+
+        .toggle {
+            text-align: center;
+            font-size: 0.875rem;
+            color: #4a7a5a;
+            margin-top: 1rem;
+        }
+
+        .toggle-btn {
+            background: none;
+            border: none;
+            color: #00ff85;
+            text-decoration: underline;
+            cursor: pointer;
+            padding: 0;
+            font-weight: 600;
+        }
+
+        .success {
+            background: rgba(0, 255, 133, 0.1);
+            border: 1px solid rgba(0, 255, 133, 0.3);
+            border-radius: 8px;
+            padding: 0.75rem;
+            font-size: 0.875rem;
+            color: #00ff85;
+            margin-top: 0.5rem;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            font-size: 0.875rem;
+            color: #4a7a5a;
+            margin-top: 1rem;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #1a3522;
+            border-top-color: #00ff85;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-right: 0.5rem;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        #dashboard {
+            display: none;
+        }
+
+        .dashboard-content {
+            text-align: center;
+        }
+
+        .dashboard-content h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #00ff85;
+        }
+
+        .dashboard-content p {
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .logout-btn {
+            background: #ff4444;
+            color: white;
+            margin-top: 1rem;
+        }
+
+        .logout-btn:hover {
+            opacity: 0.9;
+        }
+
+        #authForm {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- LOGIN FORM -->
+        <div id="authForm" class="card">
+            <div class="logo">
+                <div class="logo-box">76</div>
+                <h1>76Bets</h1>
+                <p class="subtitle">Always Calculated</p>
+            </div>
+
+            <form id="form" onsubmit="handleSubmit(event)">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        placeholder="you@example.com" 
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>Password</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        placeholder="••••••••" 
+                        required
+                    >
+                </div>
+
+                <div id="errorBox"></div>
+                <div id="successBox"></div>
+
+                <button type="submit" id="submitBtn">Sign In</button>
+
+                <div class="loading" id="loadingMsg">
+                    <span class="spinner"></span>
+                    <span>Loading...</span>
+                </div>
+            </form>
+
+            <div class="toggle">
+                <span id="toggleText">Don't have an account?</span>
+                <button class="toggle-btn" onclick="toggleMode()">
+                    <span id="toggleLink">Sign Up</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- DASHBOARD (shown after login) -->
+        <div id="dashboard" class="card">
+            <div class="dashboard-content">
+                <h2>Welcome! ✅</h2>
+                <p>You are logged in to 76Bets</p>
+                <p id="userEmail" style="color: #4a7a5a; font-size: 0.875rem; word-break: break-all;"></p>
+                <button class="logout-btn" onclick="handleLogout()">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== SUPABASE CONFIG =====
+        const SUPABASE_URL = 'https://wexldumfmwpyisuudjce.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_JtrlRlf35bMovhVHVVKs5A_IISU06Ko';
+
+        // ===== SUPABASE CLIENT =====
+        const { createClient } = window.supabase;
+        const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // ===== STATE =====
+        let isSignUpMode = false;
+
+        // ===== INIT =====
+        async function init() {
+            console.log('Initializing 76Bets...');
+            try {
+                const { data: { session }, error } = await supabase.auth.getSession();
+                
+                if (error) {
+                    console.error('Session error:', error);
+                    showAuthForm();
+                    return;
+                }
+                
+                if (session?.user) {
+                    console.log('User logged in:', session.user.email);
+                    showDashboard(session.user);
+                } else {
+                    console.log('No user session');
+                    showAuthForm();
+                }
+            } catch (err) {
+                console.error('Init error:', err);
+                showAuthForm();
+            }
+        }
+
+        // ===== AUTH HANDLER =====
+        async function handleSubmit(event) {
+            event.preventDefault();
+            
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const errorBox = document.getElementById('errorBox');
+            const successBox = document.getElementById('successBox');
+            const submitBtn = document.getElementById('submitBtn');
+            const loadingMsg = document.getElementById('loadingMsg');
+
+            // Validate
+            if (!email || !password) {
+                errorBox.innerHTML = 'Please fill in all fields';
+                errorBox.className = 'error';
+                return;
+            }
+
+            // Clear messages
+            errorBox.innerHTML = '';
+            successBox.innerHTML = '';
+            
+            // Show loading
+            submitBtn.disabled = true;
+            loadingMsg.style.display = 'block';
+
+            try {
+                if (isSignUpMode) {
+                    // SIGN UP
+                    console.log('Attempting sign up for:', email);
+                    const { data, error } = await supabase.auth.signUp({ 
+                        email, 
+                        password,
+                        options: {
+                            emailRedirectTo: window.location.href
+                        }
+                    });
+                    
+                    if (error) {
+                        throw new Error(error.message);
+                    }
+
+                    // Create profile for new user
+                    if (data.user) {
+                        console.log('Creating profile for:', data.user.id);
+                        const { error: profileError } = await supabase
+                            .from('profiles')
+                            .insert({
+                                id: data.user.id,
+                                bankroll: 0,
+                                currency: 'TZS'
+                            });
+                        
+                        if (profileError) {
+                            console.warn('Profile creation warning:', profileError);
+                        }
+                    }
+
+                    successBox.innerHTML = 'Account created! Check your email to verify, then sign in.';
+                    successBox.className = 'success';
+                    
+                    // Reset form
+                    document.getElementById('form').reset();
+                    
+                    // Switch back to sign in after 3 seconds
+                    setTimeout(() => {
+                        toggleMode();
+                        successBox.innerHTML = '';
+                    }, 3000);
+
+                } else {
+                    // SIGN IN
+                    console.log('Attempting sign in for:', email);
+                    const { data, error } = await supabase.auth.signInWithPassword({ 
+                        email, 
+                        password 
+                    });
+                    
+                    if (error) {
+                        throw new Error(error.message);
+                    }
+
+                    if (data.user) {
+                        console.log('Sign in successful:', data.user.email);
+                        showDashboard(data.user);
+                    }
+                }
+            } catch (err) {
+                console.error('Auth error:', err);
+                errorBox.innerHTML = err.message || 'Authentication failed. Please try again.';
+                errorBox.className = 'error';
+            } finally {
+                submitBtn.disabled = false;
+                loadingMsg.style.display = 'none';
+            }
+        }
+
+        // ===== TOGGLE MODE =====
+        function toggleMode() {
+            isSignUpMode = !isSignUpMode;
+            const submitBtn = document.getElementById('submitBtn');
+            const toggleText = document.getElementById('toggleText');
+            const toggleLink = document.getElementById('toggleLink');
+            const errorBox = document.getElementById('errorBox');
+            const successBox = document.getElementById('successBox');
+
+            if (isSignUpMode) {
+                submitBtn.textContent = 'Create Account';
+                toggleText.textContent = 'Already have an account?';
+                toggleLink.textContent = 'Sign In';
+            } else {
+                submitBtn.textContent = 'Sign In';
+                toggleText.textContent = "Don't have an account?";
+                toggleLink.textContent = 'Sign Up';
+            }
+
+            errorBox.innerHTML = '';
+            successBox.innerHTML = '';
+            document.getElementById('form').reset();
+        }
+
+        // ===== SHOW DASHBOARD =====
+        function showDashboard(user) {
+            document.getElementById('authForm').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            document.getElementById('userEmail').textContent = user.email;
+            console.log('Dashboard shown for:', user.email);
+        }
+
+        // ===== SHOW AUTH FORM =====
+        function showAuthForm() {
+            document.getElementById('authForm').style.display = 'block';
+            document.getElementById('dashboard').style.display = 'none';
+            isSignUpMode = false;
+            document.getElementById('form').reset();
+            document.getElementById('submitBtn').textContent = 'Sign In';
+        }
+
+        // ===== LOGOUT =====
+        async function handleLogout() {
+            try {
+                console.log('Logging out...');
+                const { error } = await supabase.auth.signOut();
+                if (error) throw error;
+                showAuthForm();
+                console.log('Logout successful');
+            } catch (err) {
+                console.error('Logout error:', err);
+                alert('Logout failed: ' + err.message);
+            }
+        }
+
+        // ===== RUN ON PAGE LOAD =====
+        window.addEventListener('DOMContentLoaded', init);
+
+        // ===== LISTEN FOR AUTH CHANGES =====
+        supabase.auth.onAuthStateChange((event, session) => {
+            console.log('Auth state changed:', event);
+            if (session?.user) {
+                showDashboard(session.user);
+            } else {
+                showAuthForm();
+            }
+        });
+    </script>
+</body>
+</html>
